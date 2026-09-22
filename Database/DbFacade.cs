@@ -1,7 +1,7 @@
 using System.Data.Odbc;
-using PersycomPAF.Database.Model;
+using ExportadorPersycom.Database.Model;
 
-namespace PersycomPAF.Database;
+namespace ExportadorPersycom.Database;
 
 // Mismo contrato de datos que el original de KoUtilities (no se toca): la vista
 // [ZZ-Rolap-DatosPAF] y sus 8 columnas, y la funcion SQL Zlib.unzipxml para descomprimir.

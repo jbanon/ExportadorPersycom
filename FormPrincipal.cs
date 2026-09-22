@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Reflection;
-using PersycomPAF.Database;
-using PersycomPAF.Zip;
+using ExportadorPersycom.Database;
+using ExportadorPersycom.Zip;
 
-namespace PersycomPAF;
+namespace ExportadorPersycom;
 
 public class FormPrincipal : Form
 {
@@ -26,7 +26,7 @@ public class FormPrincipal : Form
 
     public FormPrincipal()
     {
-        Text = "Persycom PAF";
+        Text = "Exportador Persycom";
         Font = new Font("Segoe UI", 9.5f);
         BackColor = Color.White;
         ClientSize = new Size(480, 400);
@@ -174,7 +174,7 @@ public class FormPrincipal : Form
             });
 
             ActualizarEstado($"Listo: {Path.GetFileName(ruta)}");
-            if (MessageBox.Show(this, $"ZIP generado en:\n{ruta}\n\n¿Abrir la carpeta?", "Persycom PAF",
+            if (MessageBox.Show(this, $"ZIP generado en:\n{ruta}\n\n¿Abrir la carpeta?", "Exportador Persycom",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 Process.Start("explorer.exe", $"/select,\"{ruta}\"");

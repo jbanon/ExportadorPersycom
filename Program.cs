@@ -1,4 +1,4 @@
-namespace PersycomPAF;
+namespace ExportadorPersycom;
 
 internal static class Program
 {
@@ -20,6 +20,6 @@ internal static class Program
     {
         MessageBox.Show(
             "Ha ocurrido un error inesperado y hay que cerrar la aplicacion:\n\n" + ex.Message,
-            "Persycom PAF", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            "Exportador Persycom", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }

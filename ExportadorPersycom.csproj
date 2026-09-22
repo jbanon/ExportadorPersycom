@@ -9,10 +9,10 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>PersycomPAF</RootNamespace>
-    <AssemblyName>PersycomPAF</AssemblyName>
+    <RootNamespace>ExportadorPersycom</RootNamespace>
+    <AssemblyName>ExportadorPersycom</AssemblyName>
     <ApplicationIcon>Recursos\persycom.ico</ApplicationIcon>
-    <Product>Persycom PAF</Product>
+    <Product>Exportador Persycom</Product>
     <Company>Persycom</Company>
     <Version>1.0.0</Version>
 

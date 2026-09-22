@@ -1,7 +1,7 @@
 using System.Configuration;
 using System.Data.Odbc;
 
-namespace PersycomPAF.Database;
+namespace ExportadorPersycom.Database;
 
 public static class DbConnectionFactory
 {

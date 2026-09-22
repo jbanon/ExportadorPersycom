@@ -1,7 +1,7 @@
 using System.IO.Compression;
-using PersycomPAF.Database.Model;
+using ExportadorPersycom.Database.Model;
 
-namespace PersycomPAF.Zip;
+namespace ExportadorPersycom.Zip;
 
 public static class EmpaquetadorPaf
 {
@@ -9,7 +9,7 @@ public static class EmpaquetadorPaf
     // en la raiz de C:. Aqui va a la carpeta temporal del usuario, que siempre es escribible.
     public static string CrearZip(long numero, long version, List<DatosPaf> datos, string carpetaDestino)
     {
-        string carpetaTemporal = Path.Combine(Path.GetTempPath(), "PersycomPAF", $"{numero}_v{version}");
+        string carpetaTemporal = Path.Combine(Path.GetTempPath(), "ExportadorPersycom", $"{numero}_v{version}");
         if (Directory.Exists(carpetaTemporal))
             Directory.Delete(carpetaTemporal, true);
         Directory.CreateDirectory(carpetaTemporal);

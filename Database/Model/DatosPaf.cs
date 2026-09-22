@@ -1,4 +1,4 @@
-namespace PersycomPAF.Database.Model;
+namespace ExportadorPersycom.Database.Model;
 
 public class DatosPaf
 {
