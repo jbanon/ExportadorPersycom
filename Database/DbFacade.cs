@@ -3,36 +3,23 @@ using ExportadorPersycom.Database.Model;
 
 namespace ExportadorPersycom.Database;
 
-// Mismo contrato de datos que el original de KoUtilities (no se toca): la vista
-// [ZZ-Rolap-DatosPAF] y sus 8 columnas, y la funcion SQL Zlib.unzipxml para descomprimir.
-// Aqui solo cambia como se organiza el codigo C# alrededor: conexion por llamada (using)
+// Mismo contrato de datos que el original de KoUtilities en cuanto a columnas y semantica,
+// pero SIN depender de que exista la vista [ZZ-Rolap-DatosPAF] en la base del cliente: el
+// SELECT que la definia se usa como subconsulta embebida (ConsultaZzRolapDatosPaf.Origen),
+// por decision expresa de no crear ni tocar objetos de esquema ahi.
+// Aqui tambien cambia como se organiza el codigo C# alrededor: conexion por llamada (using)
 // en vez de una conexion estatica compartida, y las excepciones SUBEN al llamador en vez
 // de tragarse en silencio (el original llamaba a un ILogger que nunca se inicializaba,
 // asi que cualquier error real de BD lanzaba NullReferenceException dentro del propio
 // catch y desaparecia sin dejar rastro).
 public class DbFacade
 {
-    public bool VistaExiste()
-    {
-        using var conn = DbConnectionFactory.Abrir();
-        using var cmd = new OdbcCommand($"SELECT OBJECT_ID('{VistaZzRolapDatosPaf.Nombre}', 'V')", conn);
-        object? resultado = cmd.ExecuteScalar();
-        return resultado is not null and not DBNull;
-    }
-
-    public void CrearVista()
-    {
-        using var conn = DbConnectionFactory.Abrir();
-        using var cmd = new OdbcCommand(VistaZzRolapDatosPaf.SqlCreacion, conn);
-        cmd.ExecuteNonQuery();
-    }
-
     public List<string> ObtenerNumerosDisponibles()
     {
         var claves = new List<string>();
         using var conn = DbConnectionFactory.Abrir();
         using var cmd = new OdbcCommand(
-            "SELECT Numero, cliente FROM [ZZ-Rolap-DatosPAF] ORDER BY Orden", conn);
+            $"SELECT Numero, Cliente FROM {ConsultaZzRolapDatosPaf.Origen} ORDER BY Orden", conn);
         using var rd = cmd.ExecuteReader();
 
         while (rd.Read())
@@ -50,8 +37,8 @@ public class DbFacade
         var versiones = new List<string>();
         using var conn = DbConnectionFactory.Abrir();
         using var cmd = new OdbcCommand(
-            "SELECT Version, NombreVersion FROM [ZZ-Rolap-DatosPAF] WHERE Numero = " +
-            numero + " ORDER BY Version", conn);
+            $"SELECT Version, NombreVersion FROM {ConsultaZzRolapDatosPaf.Origen} " +
+            $"WHERE Numero = {numero} ORDER BY Version", conn);
         using var rd = cmd.ExecuteReader();
 
         while (rd.Read())
@@ -69,8 +56,8 @@ public class DbFacade
         var resultado = new List<DatosPaf>();
         using var conn = DbConnectionFactory.Abrir();
         using var cmd = new OdbcCommand(
-            "SELECT Numero, Version, Orden, Cantidad, Nomenclatura, Zlib.unzipxml(XMLDescriptive), cliente, NombreVersion " +
-            "FROM [ZZ-Rolap-DatosPAF] WHERE Numero = " + numero + " AND Version = " + version +
+            "SELECT Numero, Version, Orden, Cantidad, Nomenclatura, Zlib.unzipxml(XMLDescriptive), Cliente, NombreVersion " +
+            $"FROM {ConsultaZzRolapDatosPaf.Origen} WHERE Numero = {numero} AND Version = {version}" +
             " ORDER BY Orden", conn);
         using var rd = cmd.ExecuteReader();
 
