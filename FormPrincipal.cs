@@ -37,7 +37,11 @@ public class FormPrincipal : Form
 
         ConstruirLayout();
 
-        Load += async (_, _) => await CargarPresupuestosAsync();
+        Load += async (_, _) =>
+        {
+            if (await AsegurarVistaAsync())
+                await CargarPresupuestosAsync();
+        };
         _cbPresupuesto.SelectedIndexChanged += async (_, _) => await CargarVersionesAsync();
         _btnCarpeta.Click += (_, _) => ElegirCarpeta();
         _btnGenerar.Click += async (_, _) => await GenerarZipAsync();
@@ -122,6 +126,44 @@ public class FormPrincipal : Form
         if (recurso is null) return null;
         using var stream = asm.GetManifestResourceStream(recurso);
         return stream is null ? null : Image.FromStream(stream);
+    }
+
+    // Antes de cargar nada, comprueba que exista la vista [ZZ-Rolap-DatosPAF] de la que
+    // depende toda la app; si falta (base de cliente recien conectada, nunca usada con esta
+    // herramienta), ofrece crearla con el CREATE VIEW embebido en VistaZzRolapDatosPaf, pero
+    // pidiendo confirmacion primero: es un cambio de esquema en la base del cliente, no algo
+    // para hacer en silencio.
+    private async Task<bool> AsegurarVistaAsync()
+    {
+        _progreso.Visible = true;
+        ActualizarEstado("Comprobando la vista de datos...");
+        try
+        {
+            bool existe = await Task.Run(() => _dbFacade.VistaExiste());
+            if (existe) return true;
+
+            var respuesta = MessageBox.Show(this,
+                $"La vista {VistaZzRolapDatosPaf.Nombre} no existe en esta base de datos.\n\n¿Crearla ahora?",
+                "Exportador Persycom", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (respuesta != DialogResult.Yes)
+            {
+                ActualizarEstado("No se puede continuar sin la vista de datos.", esError: true);
+                return false;
+            }
+
+            ActualizarEstado("Creando la vista de datos...");
+            await Task.Run(() => _dbFacade.CrearVista());
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ActualizarEstado("No se ha podido comprobar/crear la vista: " + ex.Message, esError: true);
+            return false;
+        }
+        finally
+        {
+            _progreso.Visible = false;
+        }
     }
 
     private async Task CargarPresupuestosAsync()

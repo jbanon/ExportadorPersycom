@@ -12,6 +12,21 @@ namespace ExportadorPersycom.Database;
 // catch y desaparecia sin dejar rastro).
 public class DbFacade
 {
+    public bool VistaExiste()
+    {
+        using var conn = DbConnectionFactory.Abrir();
+        using var cmd = new OdbcCommand($"SELECT OBJECT_ID('{VistaZzRolapDatosPaf.Nombre}', 'V')", conn);
+        object? resultado = cmd.ExecuteScalar();
+        return resultado is not null and not DBNull;
+    }
+
+    public void CrearVista()
+    {
+        using var conn = DbConnectionFactory.Abrir();
+        using var cmd = new OdbcCommand(VistaZzRolapDatosPaf.SqlCreacion, conn);
+        cmd.ExecuteNonQuery();
+    }
+
     public List<string> ObtenerNumerosDisponibles()
     {
         var claves = new List<string>();
