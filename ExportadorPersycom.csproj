@@ -34,6 +34,8 @@
 
   <ItemGroup>
     <PackageReference Include="System.Data.Odbc" Version="8.0.1" />
+    <!-- Conexion manual a SQL Server (tarea 0001): el proveedor mantenido, en vez de System.Data.SqlClient. -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
   </ItemGroup>
 

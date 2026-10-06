@@ -1,18 +1,15 @@
 using System.Diagnostics;
-using System.Reflection;
 using ExportadorPersycom.Database;
 using ExportadorPersycom.Zip;
+using static ExportadorPersycom.RecursosEmbebidos;
 
 namespace ExportadorPersycom;
 
 public class FormPrincipal : Form
 {
-    private static readonly Color RojoPersycom = Color.FromArgb(0xE3, 0x2B, 0x36);
-    private static readonly Color RojoPersycomOscuro = Color.FromArgb(0xC1, 0x22, 0x2C);
-    private static readonly Color GrisTexto = Color.FromArgb(0x1F, 0x29, 0x37);
-    private static readonly Color GrisSuave = Color.FromArgb(0xF4, 0xF5, 0xF7);
-
-    private readonly DbFacade _dbFacade = new();
+    // El camino de siempre: ODBC con el DSN de App.config. La busqueda avanzada (FormBusqueda)
+    // tiene su propia conexion, elegida en pantalla.
+    private readonly DbFacade _dbFacade = new(ConfiguracionConexion.OdbcPorDefecto());
 
     private readonly ComboBox _cbPresupuesto = new() { DropDownStyle = ComboBoxStyle.DropDown, AutoCompleteMode = AutoCompleteMode.None };
     private readonly ComboBox _cbVersion = new() { DropDownStyle = ComboBoxStyle.DropDownList };
@@ -20,6 +17,8 @@ public class FormPrincipal : Form
     private readonly TextBox _txtCarpeta = new() { ReadOnly = true };
     private readonly Button _btnCarpeta = new() { Text = "..." };
     private readonly Button _btnGenerar = new() { Text = "Generar ZIP" };
+    private readonly Button _btnBusqueda = new() { Text = "Búsqueda avanzada..." };
+    private FormBusqueda? _formBusqueda;
     private readonly ProgressBar _progreso = new() { Style = ProgressBarStyle.Marquee, Visible = false };
     private readonly Label _lblEstado = new() { AutoSize = false, ForeColor = GrisTexto };
 
@@ -33,11 +32,11 @@ public class FormPrincipal : Form
         Text = "Exportador Persycom";
         Font = new Font("Segoe UI", 9.5f);
         BackColor = Color.White;
-        ClientSize = new Size(480, 460);
+        ClientSize = new Size(480, 500);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        Icon = CargarIconoEmbebido();
+        Icon = Icono();
 
         ConstruirLayout();
 
@@ -48,6 +47,7 @@ public class FormPrincipal : Form
         _cbVersion.SelectedIndexChanged += async (_, _) => await CargarReferenciaAsync();
         _btnCarpeta.Click += (_, _) => ElegirCarpeta();
         _btnGenerar.Click += async (_, _) => await GenerarZipAsync();
+        _btnBusqueda.Click += (_, _) => AbrirBusquedaAvanzada();
 
         _txtCarpeta.Text = _carpetaDestino;
         ActualizarEstado("");
@@ -58,7 +58,7 @@ public class FormPrincipal : Form
         var cabecera = new Panel { Dock = DockStyle.Top, Height = 90, BackColor = Color.White };
         var logo = new PictureBox
         {
-            Image = CargarLogoEmbebido(),
+            Image = Logo(),
             SizeMode = PictureBoxSizeMode.Zoom,
             Bounds = new Rectangle(20, 15, 220, 60),
         };
@@ -109,6 +109,16 @@ public class FormPrincipal : Form
         _btnGenerar.MouseEnter += (_, _) => _btnGenerar.BackColor = RojoPersycomOscuro;
         _btnGenerar.MouseLeave += (_, _) => _btnGenerar.BackColor = RojoPersycom;
         cuerpo.Controls.Add(_btnGenerar);
+        cuerpo.Controls.Add(Espaciador(6));
+
+        // Secundario, apagado: la pantalla nueva es ADEMAS de esta, no en su lugar.
+        _btnBusqueda.Dock = DockStyle.Top;
+        _btnBusqueda.Height = 32;
+        _btnBusqueda.FlatStyle = FlatStyle.Flat;
+        _btnBusqueda.FlatAppearance.BorderColor = GrisLinea;
+        _btnBusqueda.BackColor = GrisSuave;
+        _btnBusqueda.ForeColor = GrisTexto;
+        cuerpo.Controls.Add(_btnBusqueda);
         cuerpo.Controls.Add(Espaciador());
 
         _progreso.Dock = DockStyle.Top;
@@ -126,27 +136,6 @@ public class FormPrincipal : Form
         new() { Text = texto, Dock = DockStyle.Top, AutoSize = false, Height = 22, ForeColor = GrisTexto };
 
     private static Control Espaciador(int alto = 10) => new Panel { Dock = DockStyle.Top, Height = alto };
-
-    private static Image? CargarLogoEmbebido()
-    {
-        var asm = Assembly.GetExecutingAssembly();
-        string? recurso = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("logo-persycom.png"));
-        if (recurso is null) return null;
-        using var stream = asm.GetManifestResourceStream(recurso);
-        return stream is null ? null : Image.FromStream(stream);
-    }
-
-    // Igual que CargarLogoEmbebido: evita depender de que Recursos/ viaje al lado del
-    // .exe publicado (dotnet publish -r win-x64 --self-contained no copia ese directorio
-    // al single-file, solo al build normal), para que el unico fichero distribuido baste.
-    private static Icon? CargarIconoEmbebido()
-    {
-        var asm = Assembly.GetExecutingAssembly();
-        string? recurso = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("persycom.ico"));
-        if (recurso is null) return null;
-        using var stream = asm.GetManifestResourceStream(recurso);
-        return stream is null ? null : new Icon(new Icon(stream), 32, 32);
-    }
 
     private async Task CargarPresupuestosAsync()
     {
@@ -264,6 +253,21 @@ public class FormPrincipal : Form
                 Process.Start("explorer.exe", $"/select,\"{ruta}\"");
             }
         });
+    }
+
+    // Una sola instancia: si ya esta abierta se trae al frente. No es modal, para poder tener
+    // las dos pantallas a la vista.
+    private void AbrirBusquedaAvanzada()
+    {
+        if (_formBusqueda == null || _formBusqueda.IsDisposed)
+        {
+            _formBusqueda = new FormBusqueda();
+            _formBusqueda.Show(this);
+        }
+        else
+        {
+            _formBusqueda.Activate();
+        }
     }
 
     private async Task EjecutarConEstado(string mensajeEnCurso, Func<Task> accion)

@@ -1,19 +1,10 @@
-using System.Configuration;
-using System.Data.Odbc;
+using System.Data.Common;
 
 namespace ExportadorPersycom.Database;
 
+// Queda como punto unico por el que DbFacade pide conexiones. La decision de proveedor (ODBC
+// o SQL Server) vive en ConfiguracionConexion; esto solo la aplica.
 public static class DbConnectionFactory
 {
-    // Nombre del DSN ODBC tal como lo tenia el original ("PrefSuite"); configurable en
-    // App.config para no depender de recompilar si cambia en la maquina del cliente.
-    private static string DsnName =>
-        ConfigurationManager.AppSettings["Dsn"] is string dsn && dsn.Length > 0 ? dsn : "PrefSuite";
-
-    public static OdbcConnection Abrir()
-    {
-        var conn = new OdbcConnection($"DSN={DsnName}");
-        conn.Open();
-        return conn;
-    }
+    public static DbConnection Abrir(ConfiguracionConexion configuracion) => configuracion.Abrir();
 }
