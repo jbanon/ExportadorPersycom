@@ -4,39 +4,36 @@
 
 ## Ahora mismo (06-10-2026)
 
-Repo `jbanon/ExportadorPersycom`, rama `main` (ojo, no `master`), al dia con `origin/main`
-(`ecb2e7a`). **Tarea 0001 CERRADA**: pantalla nueva `FormBusqueda` (boton "Busqueda avanzada..."
-en `FormPrincipal`, no sustituye su flujo), con:
+Repo `jbanon/ExportadorPersycom`, rama `main`, al día con `origin/main` (`09b434e`). **Tarea 0001
+CERRADA del todo**, incluido un cambio de alcance pedido directamente por el gerente tras probarla
+en Windows: la pantalla de búsqueda avanzada **pasa a ser LA pantalla de la aplicación**
+(`FormPrincipal`); la antigua (combo + filtro simple) se elimina por completo, junto con las
+consultas de `DbFacade` que solo ella usaba.
 
-- Conexion ODBC (DSN, como siempre) o SQL Server manual (host/puerto/BD/usuario/contrasena via
-  `Microsoft.Data.SqlClient`). Contrasena NUNCA se persiste; el resto de la configuracion si, en
-  `%AppData%\ExportadorPersycom\conexion.json`.
-- Cuatro cuadros de busqueda separados (Presupuesto/Pedido de compras/Cliente/Referencia de obra),
-  combinados con AND, busqueda en vivo (debounce) + Enter.
-- Grid de resultados de solo lectura (Numero, Version, Cliente, Pedido de compras, Referencia de
-  obra, Referencia); doble clic o boton genera el ZIP reutilizando el codigo existente.
-- `Database/ConsultaParametrizada.cs`: el SQL se escribe UNA vez con `@nombre`; se adapta a `?`
-  posicional para ODBC o se manda tal cual a SqlClient. Ninguna query duplicada entre proveedores.
+- Bloque de conexión plegable: se pliega solo al conectar bien o al buscar, se despliega solo si
+  falla una consulta con error de base de datos.
+- Grid con cabecera oscura, filas más altas, presupuesto en negrita, texto de "sin resultados"
+  sobre la tabla vacía.
+- Cabecera con título "Exportación de presupuestos a fábrica" y subtítulo.
+- Único hueco sin equivalente literal, documentado en el informe: el desplegable con TODOS los
+  presupuestos al abrir la pantalla antigua — ahora equivale a pulsar "Buscar" con los cuatro
+  campos vacíos.
+- Confirmado por el gerente en Windows ("de momento está ok") antes de commitear.
+- Informe `.arq/informes/0001-resultado.md` reescrito para que alguien sin contexto pueda
+  retomarlo si el cliente final (quien usa la herramienta) reporta una sugerencia o un error: qué
+  se probó y qué no (SqlClient en vivo sí; exportación completa NO por el CLR apagado en el
+  servidor de pruebas; ODBC y la prueba visual, solo en Windows), decisiones técnicas y motivo de
+  cada una.
 
-**Verificado en vivo** (unica vez hasta ahora que se ha podido probar algo real de este proyecto
-desde Linux): camino SqlClient contra `Alugal_TNeta25` (contenedor `sqlserver`, login de solo
-lectura), `ProbarConexion`/`BuscarAvanzado`/`BuscarPresupuestos`/`ObtenerVersiones`/
-`ObtenerReferencia` todos correctos. `ObtenerDatosParaExportar` (la exportacion real) falla ahi
-porque el CLR de SQL Server esta desactivado en ese contenedor (`Zlib.unzipxml` lo necesita) —
-**pendiente de decision del gerente**: activarlo (`sp_configure 'clr enabled'`, a nivel de
-SERVIDOR, afecta tambien a la base del Presupuestador) o dejarlo, la rama ODBC real en Windows no
-tiene este problema.
+**Sin resolver**: `SEG-1` (backlog) — Control Inteligente de Aplicaciones sigue bloqueando el
+`.exe` sin firmar; no se ha tocado.
 
-**Sin probar en vivo todavia**: el camino ODBC completo, y la pantalla WinForms (maquetacion,
-tamanos, comportamiento del grid) — necesitan una maquina Windows real.
+## Pendiente de decisión del gerente
 
-## Pendiente de decision del gerente
-
-- **SEG-1** (backlog): Control Inteligente de Aplicaciones bloqueando el `.exe` sin firmar en la
-  maquina de pruebas. Sin resolver.
-- Activar o no el CLR en el SQL Server de este servidor, para poder probar la exportacion completa
-  desde aqui (ver arriba).
-- Pendiente de que alguien pruebe la pantalla nueva en una maquina Windows real.
+- **SEG-1**: desactivar Control Inteligente de Aplicaciones en la máquina de pruebas, o firmar el
+  ejecutable.
+- Activar o no el CLR de SQL Server en el contenedor compartido con el Presupuestador, para poder
+  probar la exportación completa desde Linux (hoy falla solo ahí, `Zlib.unzipxml` es SQLCLR).
 
 ## Convenciones vigentes
 

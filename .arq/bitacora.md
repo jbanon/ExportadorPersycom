@@ -42,3 +42,16 @@ PresupuestadorPersycom). Commit `ecb2e7a` en `origin/main`, confirmado.
 Queda sin probar en vivo el camino ODBC real y la pantalla WinForms (necesitan una máquina Windows
 real) y sin resolver el bloqueo de Control Inteligente de Aplicaciones sobre el `.exe` sin firmar
 (`SEG-1`).
+
+**06-10-2026 — 0001 cerrada del todo: la pantalla de búsqueda pasa a ser la principal.** El
+gerente probó la primera versión en Windows y pidió, directamente a Fable (sin pasar por el
+arquitecto, igual que el cambio del icono antes), que la pantalla nueva sustituyera a la antigua
+en vez de convivir con ella: conexión plegable, grid más cuidado, cabecera con título/subtítulo.
+Revisado el `git diff` completo (fusión de `FormBusqueda` en `FormPrincipal`, limpieza de
+`DbFacade`/`ConfiguracionConexion`, sin clases duplicadas, `Program.cs` sin cambios necesarios):
+correcto. Confirmado por el gerente en Windows ("de momento está ok") antes de dar la orden de
+commitear. Push `09b434e`. Informe reescrito a petición expresa del gerente para que, si el
+cliente final reporta algo más adelante, cualquiera pueda retomarlo sin preguntar — Fable separó
+claramente qué se probó en vivo (SqlClient contra Alugal_TNeta25) de lo que no (exportación
+completa, bloqueada por el CLR apagado en el contenedor de pruebas; ODBC; la pantalla en sí, solo
+verificada por el gerente en Windows).
