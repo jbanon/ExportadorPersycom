@@ -45,9 +45,6 @@ public sealed class ConfiguracionConexion
     public static string DsnPorDefecto =>
         ConfigurationManager.AppSettings["Dsn"] is string dsn && dsn.Length > 0 ? dsn : "PrefSuite";
 
-    /// <summary>La configuracion de siempre: ODBC con el DSN de App.config. La usa FormPrincipal.</summary>
-    public static ConfiguracionConexion OdbcPorDefecto() => new() { Modo = ModoConexion.Odbc, Dsn = DsnPorDefecto };
-
     public bool EsOdbc => Modo == ModoConexion.Odbc;
 
     /// <summary>Texto corto para la barra de estado: a que se esta conectando, sin la contrasena.</summary>

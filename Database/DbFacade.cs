@@ -17,14 +17,14 @@ namespace ExportadorPersycom.Database;
 // la ConfiguracionConexion que se recibe al construir (ODBC con DSN, o SQL Server directo).
 // Las consultas con texto del usuario se escriben con @nombre y pasan por
 // ConsultaParametrizada, que las adapta al proveedor: ninguna query existe dos veces.
+// Al retirarse la pantalla antigua (orden del gerente, 06-10-2026) se fueron con ella sus
+// consultas (lista completa, buscador OR, versiones y referencia sueltas): la busqueda
+// avanzada ya devuelve todo eso en una sola fila por presupuesto+version.
 public class DbFacade
 {
     private readonly ConfiguracionConexion _conexion;
 
     public DbFacade(ConfiguracionConexion conexion) => _conexion = conexion;
-
-    /// <summary>El camino de siempre: ODBC con el DSN de App.config.</summary>
-    public DbFacade() : this(ConfiguracionConexion.OdbcPorDefecto()) { }
 
     public ConfiguracionConexion Conexion => _conexion;
 
@@ -44,52 +44,6 @@ public class DbFacade
         using var cmd = Comando(conn, "SELECT 1");
         cmd.ExecuteScalar();
         return $"{conn.DataSource} · {conn.ServerVersion}";
-    }
-
-    public List<string> ObtenerNumerosDisponibles()
-    {
-        var claves = new List<string>();
-        using var conn = Abrir();
-        using var cmd = Comando(conn, $"SELECT Numero, Cliente FROM {ConsultaZzRolapDatosPaf.Origen} ORDER BY Numero DESC");
-        using var rd = cmd.ExecuteReader();
-
-        while (rd.Read())
-        {
-            string numero = rd.IsDBNull(0) ? "NN" : rd[0].ToString()!;
-            string cliente = rd.IsDBNull(1) ? "XX" : rd[1].ToString()!;
-            string clave = cliente != "XX" ? $"{numero} - {cliente}" : numero;
-            if (!claves.Contains(clave)) claves.Add(clave);
-        }
-        return claves;
-    }
-
-    // Texto libre escrito por el usuario: SIEMPRE parametrizado. A diferencia de Numero/Version
-    // en el resto de la clase (long ya parseados, sin riesgo de inyeccion), este texto no se
-    // interpola nunca en el SQL. El mismo patron en los cuatro campos: es el buscador unico de
-    // FormPrincipal, en OR.
-    public List<string> BuscarPresupuestos(string texto)
-    {
-        var claves = new List<string>();
-        string patron = $"%{EscaparComodinesLike(texto)}%";
-        using var conn = Abrir();
-        using var cmd = ConsultaParametrizada.Crear(conn,
-            $"SELECT Numero, Cliente FROM {ConsultaZzRolapDatosPaf.Origen} " +
-            "WHERE UPPER(CAST(Numero AS VARCHAR(50))) LIKE UPPER(@texto) " +
-            "OR UPPER(CAST(NumeroPedido AS VARCHAR(50))) LIKE UPPER(@texto) " +
-            "OR UPPER(Cliente) LIKE UPPER(@texto) " +
-            "OR UPPER(Obra) LIKE UPPER(@texto) " +
-            "ORDER BY Numero DESC",
-            new Dictionary<string, object?> { ["texto"] = patron });
-        using var rd = cmd.ExecuteReader();
-
-        while (rd.Read())
-        {
-            string numero = rd.IsDBNull(0) ? "NN" : rd[0].ToString()!;
-            string cliente = rd.IsDBNull(1) ? "XX" : rd[1].ToString()!;
-            string clave = cliente != "XX" ? $"{numero} - {cliente}" : numero;
-            if (!claves.Contains(clave)) claves.Add(clave);
-        }
-        return claves;
     }
 
     /// <summary>
@@ -144,37 +98,6 @@ public class DbFacade
     // ESCAPE) para que el texto del usuario se busque como subcadena literal.
     private static string EscaparComodinesLike(string texto) =>
         texto.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
-
-    // PAF.Referencia es un dato de cabecera (Numero+Version), no de linea: por eso no vive
-    // en DatosPaf (que es por linea de ContenidoPAF, para el ZIP) sino en su propia consulta.
-    public string? ObtenerReferencia(long numero, long version)
-    {
-        using var conn = Abrir();
-        using var cmd = Comando(conn,
-            $"SELECT Referencia FROM {ConsultaZzRolapDatosPaf.Origen} " +
-            $"WHERE Numero = {numero} AND Version = {version}");
-        using var rd = cmd.ExecuteReader();
-        return rd.Read() && !rd.IsDBNull(0) ? rd[0].ToString() : null;
-    }
-
-    public List<string> ObtenerVersiones(long numero)
-    {
-        var versiones = new List<string>();
-        using var conn = Abrir();
-        using var cmd = Comando(conn,
-            $"SELECT Version, NombreVersion FROM {ConsultaZzRolapDatosPaf.Origen} " +
-            $"WHERE Numero = {numero} ORDER BY Version");
-        using var rd = cmd.ExecuteReader();
-
-        while (rd.Read())
-        {
-            string version = rd.IsDBNull(0) ? "NN" : rd[0].ToString()!;
-            string nombreVersion = rd.IsDBNull(1) ? "XX" : rd[1].ToString()!;
-            string clave = nombreVersion != "XX" ? $"{version} - {nombreVersion}" : version;
-            if (!versiones.Contains(clave)) versiones.Add(clave);
-        }
-        return versiones;
-    }
 
     public List<DatosPaf> ObtenerDatosParaExportar(long numero, long version)
     {
