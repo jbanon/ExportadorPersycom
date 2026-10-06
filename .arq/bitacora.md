@@ -28,3 +28,17 @@ existente. Señalado como reto técnico explícito en la propia tarea: el SQL em
 marcadores `?` (ODBC); `SqlClient` necesita `@nombre` — hay que resolver esa diferencia sin
 duplicar las queries, y se deja a criterio del programador cómo, con instrucción de explicarlo en
 el informe. Despachada a `PRESUP-ProgFable`.
+
+**06-10-2026 — Tarea 0001 CERRADA, revisada y aprobada.** Revisado `git diff` completo antes de
+aprobar: `ConfiguracionConexion`/`ConsultaParametrizada` correctos (ninguna query de usuario sin
+parametrizar, contraseña nunca persistida, invalidación de conexión cacheada al cambiar cualquier
+campo), grid de solo lectura. Verificado en vivo por primera vez algo real de este proyecto desde
+Linux: el camino SqlClient contra `Alugal_TNeta25` funciona; la exportación completa
+(`ObtenerDatosParaExportar`) falla en ese contenedor concreto por tener el CLR de SQL Server
+desactivado (afecta a `Zlib.unzipxml`) — no es un fallo del código, y no se ha tocado esa
+configuración del servidor sin que lo decida el gerente (es a nivel de instancia, compartida con
+PresupuestadorPersycom). Commit `ecb2e7a` en `origin/main`, confirmado.
+
+Queda sin probar en vivo el camino ODBC real y la pantalla WinForms (necesitan una máquina Windows
+real) y sin resolver el bloqueo de Control Inteligente de Aplicaciones sobre el `.exe` sin firmar
+(`SEG-1`).

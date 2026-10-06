@@ -5,42 +5,42 @@
 ## Ahora mismo (06-10-2026)
 
 Repo `jbanon/ExportadorPersycom`, rama `main` (ojo, no `master`), al dia con `origin/main`
-(`9355f2c`). Protocolo `.arq/` creado hoy, primera sesion de este proyecto con este montaje.
+(`ecb2e7a`). **Tarea 0001 CERRADA**: pantalla nueva `FormBusqueda` (boton "Busqueda avanzada..."
+en `FormPrincipal`, no sustituye su flujo), con:
 
-**Trabajo de hoy (sesion unica, antes de este fichero) resumido**:
-- Buscador simple (un cuadro, filtra en vivo por Numero/NumeroPedido/Cliente/Obra, parametrizado),
-  orden por `Numero DESC` (antes `ORDER BY Orden`, de ahi el desorden que reporto el gerente), y
-  campo `PAF.Referencia` mostrado en pantalla. Implementado por PRESUP-ProgSonnet. Commit `c820940`.
-- Bug encontrado en la primera prueba real en Windows: el `.exe` publicado como single-file no
-  llevaba la carpeta `Recursos/` (el icono se cargaba desde disco) y crasheaba al arrancar.
-  Arreglado incrustando el `.ico` como recurso embebido, igual que ya se hacia con el logo.
-  Commit `9355f2c`.
-- Probado en Windows: bloqueado por **Control Inteligente de Aplicaciones** (Smart App Control),
-  no por SmartScreen — `Unblock-File` no sirve contra esto. Sin resolver: pendiente de que el
-  gerente decida entre desactivar esa proteccion en la maquina de pruebas o firmar el ejecutable.
-  Ver `.arq/backlog.md`.
+- Conexion ODBC (DSN, como siempre) o SQL Server manual (host/puerto/BD/usuario/contrasena via
+  `Microsoft.Data.SqlClient`). Contrasena NUNCA se persiste; el resto de la configuracion si, en
+  `%AppData%\ExportadorPersycom\conexion.json`.
+- Cuatro cuadros de busqueda separados (Presupuesto/Pedido de compras/Cliente/Referencia de obra),
+  combinados con AND, busqueda en vivo (debounce) + Enter.
+- Grid de resultados de solo lectura (Numero, Version, Cliente, Pedido de compras, Referencia de
+  obra, Referencia); doble clic o boton genera el ZIP reutilizando el codigo existente.
+- `Database/ConsultaParametrizada.cs`: el SQL se escribe UNA vez con `@nombre`; se adapta a `?`
+  posicional para ODBC o se manda tal cual a SqlClient. Ninguna query duplicada entre proveedores.
 
-**Tarea 0001 en marcha**: pantalla nueva (ADEMAS de la actual, sin reemplazarla) con selector de
-conexion ODBC/PrefSuite o **SQL Server manual** (host/BD/usuario/contrasena, confirmado con el
-gerente, via `SqlClient`), cuatro cuadros de busqueda separados (uno por campo) y un panel de
-resultados en grid. Ver `.arq/tareas/0001-pantalla-busqueda-conexion-manual.md`. Despachada a
-PRESUP-ProgFable.
+**Verificado en vivo** (unica vez hasta ahora que se ha podido probar algo real de este proyecto
+desde Linux): camino SqlClient contra `Alugal_TNeta25` (contenedor `sqlserver`, login de solo
+lectura), `ProbarConexion`/`BuscarAvanzado`/`BuscarPresupuestos`/`ObtenerVersiones`/
+`ObtenerReferencia` todos correctos. `ObtenerDatosParaExportar` (la exportacion real) falla ahi
+porque el CLR de SQL Server esta desactivado en ese contenedor (`Zlib.unzipxml` lo necesita) —
+**pendiente de decision del gerente**: activarlo (`sp_configure 'clr enabled'`, a nivel de
+SERVIDOR, afecta tambien a la base del Presupuestador) o dejarlo, la rama ODBC real en Windows no
+tiene este problema.
 
-**Hallazgo importante para pruebas futuras**: el camino de conexion manual a SQL Server, una vez
-implementado, permite probar ESTE PROYECTO en vivo desde Linux contra el contenedor `sqlserver`
-de este servidor (base `Alugal_TNeta25`, copia del esquema real de Preference/Alugal, casi sin
-filas). El camino ODBC sigue sin poder probarse mas que en una maquina Windows real.
+**Sin probar en vivo todavia**: el camino ODBC completo, y la pantalla WinForms (maquetacion,
+tamanos, comportamiento del grid) — necesitan una maquina Windows real.
 
 ## Pendiente de decision del gerente
 
-- **Control Inteligente de Aplicaciones** bloqueando el `.exe` en la maquina de pruebas: ¿se
-  desactiva (ojo, en muchas versiones de Windows 11 es dificil de reactivar sin reinstalar) o se
-  firma el ejecutable?
+- **SEG-1** (backlog): Control Inteligente de Aplicaciones bloqueando el `.exe` sin firmar en la
+  maquina de pruebas. Sin resolver.
+- Activar o no el CLR en el SQL Server de este servidor, para poder probar la exportacion completa
+  desde aqui (ver arriba).
+- Pendiente de que alguien pruebe la pantalla nueva en una maquina Windows real.
 
 ## Convenciones vigentes
 
-- El arquitecto verifica cada entrega con `git diff`/build antes de aprobar, igual que en
-  PresupuestadorPersycom.
+- El arquitecto verifica cada entrega con `git diff`/build antes de aprobar.
 - Credenciales (DSN, SQL Server manual): nunca en fichero versionado en git.
 - Sin commit/push sin orden explicita del arquitecto.
 
