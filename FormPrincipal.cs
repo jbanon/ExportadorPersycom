@@ -37,7 +37,7 @@ public class FormPrincipal : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        Icon = new Icon(Path.Combine(AppContext.BaseDirectory, "Recursos", "persycom.ico"), 32, 32);
+        Icon = CargarIconoEmbebido();
 
         ConstruirLayout();
 
@@ -134,6 +134,18 @@ public class FormPrincipal : Form
         if (recurso is null) return null;
         using var stream = asm.GetManifestResourceStream(recurso);
         return stream is null ? null : Image.FromStream(stream);
+    }
+
+    // Igual que CargarLogoEmbebido: evita depender de que Recursos/ viaje al lado del
+    // .exe publicado (dotnet publish -r win-x64 --self-contained no copia ese directorio
+    // al single-file, solo al build normal), para que el unico fichero distribuido baste.
+    private static Icon? CargarIconoEmbebido()
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        string? recurso = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("persycom.ico"));
+        if (recurso is null) return null;
+        using var stream = asm.GetManifestResourceStream(recurso);
+        return stream is null ? null : new Icon(new Icon(stream), 32, 32);
     }
 
     private async Task CargarPresupuestosAsync()

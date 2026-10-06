@@ -28,7 +28,8 @@
   <ItemGroup>
     <None Remove="Recursos\logo-persycom.png" />
     <EmbeddedResource Include="Recursos\logo-persycom.png" />
-    <None Update="Recursos\persycom.ico" CopyToOutputDirectory="PreserveNewest" />
+    <None Remove="Recursos\persycom.ico" />
+    <EmbeddedResource Include="Recursos\persycom.ico" />
   </ItemGroup>
 
   <ItemGroup>
