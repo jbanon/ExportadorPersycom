@@ -19,7 +19,7 @@ public class DbFacade
         var claves = new List<string>();
         using var conn = DbConnectionFactory.Abrir();
         using var cmd = new OdbcCommand(
-            $"SELECT Numero, Cliente FROM {ConsultaZzRolapDatosPaf.Origen} ORDER BY Orden", conn);
+            $"SELECT Numero, Cliente FROM {ConsultaZzRolapDatosPaf.Origen} ORDER BY Numero DESC", conn);
         using var rd = cmd.ExecuteReader();
 
         while (rd.Read())
@@ -30,6 +30,54 @@ public class DbFacade
             if (!claves.Contains(clave)) claves.Add(clave);
         }
         return claves;
+    }
+
+    // Texto libre escrito por el usuario: SIEMPRE parametrizado (marcador ? de ODBC, en el
+    // orden de aparicion). A diferencia de Numero/Version en el resto de la clase (long ya
+    // parseados, sin riesgo de inyeccion), este texto no se interpola nunca en el SQL.
+    public List<string> BuscarPresupuestos(string texto)
+    {
+        var claves = new List<string>();
+        string patron = $"%{EscaparComodinesLike(texto)}%";
+        using var conn = DbConnectionFactory.Abrir();
+        using var cmd = new OdbcCommand(
+            $"SELECT Numero, Cliente FROM {ConsultaZzRolapDatosPaf.Origen} " +
+            "WHERE UPPER(CAST(Numero AS VARCHAR(50))) LIKE UPPER(?) " +
+            "OR UPPER(NumeroPedido) LIKE UPPER(?) " +
+            "OR UPPER(Cliente) LIKE UPPER(?) " +
+            "OR UPPER(Obra) LIKE UPPER(?) " +
+            "ORDER BY Numero DESC", conn);
+        cmd.Parameters.AddWithValue("texto_numero", patron);
+        cmd.Parameters.AddWithValue("texto_pedido", patron);
+        cmd.Parameters.AddWithValue("texto_cliente", patron);
+        cmd.Parameters.AddWithValue("texto_obra", patron);
+        using var rd = cmd.ExecuteReader();
+
+        while (rd.Read())
+        {
+            string numero = rd.IsDBNull(0) ? "NN" : rd[0].ToString()!;
+            string cliente = rd.IsDBNull(1) ? "XX" : rd[1].ToString()!;
+            string clave = cliente != "XX" ? $"{numero} - {cliente}" : numero;
+            if (!claves.Contains(clave)) claves.Add(clave);
+        }
+        return claves;
+    }
+
+    // Escapa los comodines propios de LIKE en T-SQL (sintaxis de corchetes, sin necesitar
+    // ESCAPE) para que el texto del usuario se busque como subcadena literal.
+    private static string EscaparComodinesLike(string texto) =>
+        texto.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+
+    // PAF.Referencia es un dato de cabecera (Numero+Version), no de linea: por eso no vive
+    // en DatosPaf (que es por linea de ContenidoPAF, para el ZIP) sino en su propia consulta.
+    public string? ObtenerReferencia(long numero, long version)
+    {
+        using var conn = DbConnectionFactory.Abrir();
+        using var cmd = new OdbcCommand(
+            $"SELECT Referencia FROM {ConsultaZzRolapDatosPaf.Origen} " +
+            $"WHERE Numero = {numero} AND Version = {version}", conn);
+        using var rd = cmd.ExecuteReader();
+        return rd.Read() && !rd.IsDBNull(0) ? rd[0].ToString() : null;
     }
 
     public List<string> ObtenerVersiones(long numero)

@@ -14,13 +14,17 @@ public class FormPrincipal : Form
 
     private readonly DbFacade _dbFacade = new();
 
-    private readonly ComboBox _cbPresupuesto = new() { DropDownStyle = ComboBoxStyle.DropDownList };
+    private readonly ComboBox _cbPresupuesto = new() { DropDownStyle = ComboBoxStyle.DropDown, AutoCompleteMode = AutoCompleteMode.None };
     private readonly ComboBox _cbVersion = new() { DropDownStyle = ComboBoxStyle.DropDownList };
+    private readonly TextBox _txtReferencia = new() { ReadOnly = true };
     private readonly TextBox _txtCarpeta = new() { ReadOnly = true };
     private readonly Button _btnCarpeta = new() { Text = "..." };
     private readonly Button _btnGenerar = new() { Text = "Generar ZIP" };
     private readonly ProgressBar _progreso = new() { Style = ProgressBarStyle.Marquee, Visible = false };
     private readonly Label _lblEstado = new() { AutoSize = false, ForeColor = GrisTexto };
+
+    // Debounce del buscador de presupuestos: evita una consulta por cada tecla pulsada.
+    private readonly System.Windows.Forms.Timer _debounceBusqueda = new() { Interval = 300 };
 
     private string _carpetaDestino = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
 
@@ -29,7 +33,7 @@ public class FormPrincipal : Form
         Text = "Exportador Persycom";
         Font = new Font("Segoe UI", 9.5f);
         BackColor = Color.White;
-        ClientSize = new Size(480, 400);
+        ClientSize = new Size(480, 460);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -39,6 +43,9 @@ public class FormPrincipal : Form
 
         Load += async (_, _) => await CargarPresupuestosAsync();
         _cbPresupuesto.SelectedIndexChanged += async (_, _) => await CargarVersionesAsync();
+        _cbPresupuesto.TextChanged += (_, _) => ReiniciarDebounceBusqueda();
+        _debounceBusqueda.Tick += async (_, _) => await EjecutarBusquedaAsync();
+        _cbVersion.SelectedIndexChanged += async (_, _) => await CargarReferenciaAsync();
         _btnCarpeta.Click += (_, _) => ElegirCarpeta();
         _btnGenerar.Click += async (_, _) => await GenerarZipAsync();
 
@@ -74,6 +81,11 @@ public class FormPrincipal : Form
         cuerpo.Controls.Add(NuevaEtiqueta("Versión"));
         _cbVersion.Dock = DockStyle.Top;
         cuerpo.Controls.Add(_cbVersion);
+        cuerpo.Controls.Add(Espaciador());
+
+        cuerpo.Controls.Add(NuevaEtiqueta("Referencia"));
+        _txtReferencia.Dock = DockStyle.Top;
+        cuerpo.Controls.Add(_txtReferencia);
         cuerpo.Controls.Add(Espaciador());
 
         cuerpo.Controls.Add(NuevaEtiqueta("Carpeta destino"));
@@ -129,19 +141,79 @@ public class FormPrincipal : Form
         await EjecutarConEstado("Cargando presupuestos...", async () =>
         {
             var claves = await Task.Run(() => _dbFacade.ObtenerNumerosDisponibles());
-            _cbPresupuesto.DataSource = claves;
+            RepoblarPresupuestos(claves);
         });
+    }
+
+    private void ReiniciarDebounceBusqueda()
+    {
+        // Elegir un item de la lista (click, o flechas+Enter) tambien dispara TextChanged,
+        // porque el combo pone Text = la etiqueta del item elegido; en ese caso SelectedIndex
+        // ya no es -1. Sin este filtro, 300ms despues de un acierto se relanzaria la busqueda
+        // con la etiqueta completa como patron, sin coincidencias, vaciando la lista.
+        if (_cbPresupuesto.SelectedIndex != -1) return;
+
+        _debounceBusqueda.Stop();
+        _debounceBusqueda.Start();
+    }
+
+    private async Task EjecutarBusquedaAsync()
+    {
+        _debounceBusqueda.Stop();
+        string texto = _cbPresupuesto.Text.Trim();
+        if (texto.Length == 0)
+        {
+            await CargarPresupuestosAsync();
+            return;
+        }
+
+        await EjecutarConEstado("Buscando...", async () =>
+        {
+            var claves = await Task.Run(() => _dbFacade.BuscarPresupuestos(texto));
+            RepoblarPresupuestos(claves, conservarTexto: true);
+            ActualizarEstado(claves.Count == 0 ? "Sin resultados para esa búsqueda." : "");
+            if (claves.Count > 0) _cbPresupuesto.DroppedDown = true;
+        });
+    }
+
+    private void RepoblarPresupuestos(List<string> claves, bool conservarTexto = false)
+    {
+        string textoActual = _cbPresupuesto.Text;
+        _cbPresupuesto.Items.Clear();
+        _cbPresupuesto.Items.AddRange(claves.Cast<object>().ToArray());
+        if (conservarTexto)
+        {
+            _cbPresupuesto.Text = textoActual;
+            _cbPresupuesto.SelectionStart = textoActual.Length;
+        }
     }
 
     private async Task CargarVersionesAsync()
     {
-        long numero = ExtraerNumero(_cbPresupuesto.SelectedItem?.ToString());
+        long numero = ExtraerNumero(_cbPresupuesto.Text);
         if (numero <= 0) return;
 
         await EjecutarConEstado("Cargando versiones...", async () =>
         {
             var versiones = await Task.Run(() => _dbFacade.ObtenerVersiones(numero));
             _cbVersion.DataSource = versiones;
+        });
+    }
+
+    private async Task CargarReferenciaAsync()
+    {
+        long numero = ExtraerNumero(_cbPresupuesto.Text);
+        long version = ExtraerNumero(_cbVersion.SelectedItem?.ToString());
+        if (numero <= 0 || version <= 0)
+        {
+            _txtReferencia.Text = "";
+            return;
+        }
+
+        await EjecutarConEstado("Cargando referencia...", async () =>
+        {
+            string? referencia = await Task.Run(() => _dbFacade.ObtenerReferencia(numero, version));
+            _txtReferencia.Text = referencia ?? "";
         });
     }
 
@@ -157,7 +229,7 @@ public class FormPrincipal : Form
 
     private async Task GenerarZipAsync()
     {
-        long numero = ExtraerNumero(_cbPresupuesto.SelectedItem?.ToString());
+        long numero = ExtraerNumero(_cbPresupuesto.Text);
         long version = ExtraerNumero(_cbVersion.SelectedItem?.ToString());
         if (numero <= 0 || version <= 0)
         {

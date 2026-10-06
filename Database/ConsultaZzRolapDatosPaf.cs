@@ -16,7 +16,10 @@ public static class ConsultaZzRolapDatosPaf
                 dbo.ContenidoPAF.Nomenclatura,
                 dbo.ContenidoPAFBlob.XMLDescriptive,
                 dbo.PAF.Nombre AS Cliente,
-                dbo.PAF.NombreVersion
+                dbo.PAF.NombreVersion,
+                dbo.PAF.NumeroPedido,
+                dbo.PAF.Obra,
+                dbo.PAF.Referencia
             FROM dbo.ContenidoPAF
             INNER JOIN dbo.ContenidoPAFBlob
                 ON dbo.ContenidoPAF.Numero = dbo.ContenidoPAFBlob.Numero
