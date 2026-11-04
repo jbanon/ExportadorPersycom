@@ -65,7 +65,7 @@ public class DbFacade
         Filtro("numero", "CAST(Numero AS VARCHAR(50))", numero);
         Filtro("pedido", "CAST(NumeroPedido AS VARCHAR(50))", pedidoCompras);
         Filtro("cliente", "Cliente", cliente);
-        Filtro("obra", "Obra", referenciaObra);
+        Filtro("obra", "Referencia", referenciaObra);
 
         string where = condiciones.Count == 0 ? "" : " WHERE " + string.Join(" AND ", condiciones);
         var resultado = new List<ResultadoBusqueda>();
