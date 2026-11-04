@@ -27,19 +27,14 @@ filtra: de `Obra` a `Referencia`. No se añade un filtro OR sobre ambas columnas
    `Referencia`, no se tocan ni se renombran).
 3. Verificación — ver la nota de abajo sobre el entorno antes de intentarlo.
 
-## Verificación (lee esto antes de intentar probar en vivo)
-La base de pruebas `Alugal_TNeta25` que usaba la sesión anterior para probar contra SQL Server en
-vivo vivía en un contenedor Docker de la máquina de dev VIEJA (ver `.arq/trampas.md`, bloque
-"Entorno / pruebas desde Linux"). Esta es una máquina de dev NUEVA desde el 03-11-2026: no hay
-Docker instalado y esa base no existe en el SQL Server nativo de aquí (confirmado,
-`sys.databases` solo lista `PersycomPresupuestador`). **No la recrees ni instales Docker por tu
-cuenta** — si hace falta para esta tarea, para y pregunta. Para esta tarea concreta, con
-`dotnet build` (0 errores, 0 avisos) y una lectura cuidadosa del cambio (una sola línea, un solo
-nombre de columna) debería bastar; dilo explícitamente en el informe si crees que hace falta algo
-más.
+## Verificación
+`Alugal_TNeta25` ya está restaurada en el SQL Server nativo de esta máquina (traída de la máquina
+vieja el 04-11-2026, ver `.arq/trampas.md`) — sigue casi vacía (1 fila en `PAF`), sirve para
+comprobar que la query no falla, no para validar resultados con volumen real. Pide al arquitecto
+la cadena de conexión manual a SQL Server si la necesitas. Con eso más `dotnet build` (0 errores,
+0 avisos) debería bastar.
 
 ## Fuera de alcance
-- Recrear la base de pruebas `Alugal_TNeta25` o instalar Docker en esta máquina.
 - Cualquier otro campo de búsqueda o columna del grid.
 - `SEG-1` (backlog, firma del ejecutable / Smart App Control): no relacionado.
 

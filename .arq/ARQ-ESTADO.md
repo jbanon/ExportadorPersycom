@@ -15,10 +15,11 @@ Tarea 0001 (pantalla de búsqueda avanzada) sigue cerrada, sin cambios desde la 
 sobre `PAF.Referencia`): escrita en `.arq/tareas/0002-busqueda-obra-por-referencia.md`, pendiente
 de asignar a un programador — aún sin despachar.
 
-**Hallazgo de esta sesión**: la base de pruebas `Alugal_TNeta25` (contenedor Docker de la máquina
-vieja) no existe en la máquina nueva, que no tiene Docker y tiene SQL Server nativo con solo
-`PersycomPresupuestador`. El camino de verificación en vivo contra SQL Server está roto hasta que
-se decida recrear el esquema de pruebas o montar Docker. Anotado en trampas.md.
+**Resuelto en esta sesión**: la base de pruebas `Alugal_TNeta25` ya está traída a esta máquina
+(SQL Server nativo, no Docker) desde la máquina vieja por SSH. Verificado `ONLINE`, con los
+mismos datos mínimos que ya tenía (1 fila en `PAF`/`ContenidoPAF`). El camino de "probar la
+conexión manual a SQL Server desde Linux" vuelve a estar disponible. Detalle del procedimiento en
+trampas.md.
 
 **Sin resolver**: `SEG-1` (backlog) — Control Inteligente de Aplicaciones sigue bloqueando el
 `.exe` sin firmar; no se ha tocado.
@@ -27,8 +28,6 @@ se decida recrear el esquema de pruebas o montar Docker. Anotado en trampas.md.
 
 - **SEG-1**: desactivar Control Inteligente de Aplicaciones en la máquina de pruebas, o firmar el
   ejecutable.
-- Recrear la base de pruebas `Alugal_TNeta25` en la máquina nueva (y con qué datos), o instalar
-  Docker de nuevo — sin esto, ninguna tarea puede probarse en vivo contra SQL Server desde Linux.
 
 ## Convenciones vigentes
 

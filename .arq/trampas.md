@@ -42,12 +42,17 @@
   nombre. No perder tiempo mirándolo de nuevo sin comprobar antes que tiene contenido real.
 - **Corrección 04-11-2026**: la máquina de dev cambió el 03-11-2026 (misma máquina física que
   `PresupuestadorPersycom`, ver el `trampas.md` de ese repo). La máquina nueva (`persydesaubnt`)
-  NO tiene Docker instalado (`docker` no existe en el PATH) y su SQL Server es una instalación
-  nativa con una sola base, `PersycomPresupuestador` (confirmado con `SELECT name FROM
-  sys.databases`) — la base `Alugal_TNeta25` del párrafo de arriba NO existe aquí. El camino de
-  "probar la conexión manual a SQL Server desde Linux" descrito en este fichero y en `CLAUDE.md`
-  está roto hasta que alguien decida si recrear ese esquema de pruebas (con qué datos) o montar
-  Docker de nuevo — no se ha tocado, es una decisión del gerente/arquitecto, no de quien implemente
-  una tarea. Repo clonado por primera vez en esta máquina el 04-11-2026, en
+  NO tiene Docker instalado (`docker` no existe en el PATH); su SQL Server es una instalación
+  nativa. Repo clonado por primera vez en esta máquina el 04-11-2026, en
   `/home/persyadmin/proyectos/ExportadorPersycom`; `dotnet build` (target `net8.0-windows`) ya
   verificado 0/0 ahí.
+- **`Alugal_TNeta25` ya está en el SQL Server nativo de esta máquina (04-11-2026)**: traída de la
+  máquina vieja por SSH (contenedor Docker `sqlserver` de `presupuestador-dev.winsoft.es`,
+  `BACKUP DATABASE` dentro del contenedor, `docker cp` + `scp` + `RESTORE DATABASE` aquí, con
+  `MOVE` porque las rutas físicas del backup ya coincidían con `/var/opt/mssql/data/` del
+  install nativo). Confirmado tras restaurar: sigue casi vacía, 1 fila en `PAF` y 1 en
+  `ContenidoPAF` — el `.bak` pesa 400 MB por el fichero de datos preasignado, no por volumen real;
+  sigue sirviendo solo para comprobar que las queries no fallan, NO para validar resultados con
+  volumen real (igual que decía la nota de abajo de la máquina vieja). El `.bak` queda en
+  `/var/opt/mssql/backup/Alugal_TNeta25.bak` (propiedad `mssql:mssql`) por si hace falta
+  rehacer la restauración.
