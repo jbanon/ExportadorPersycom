@@ -4,16 +4,18 @@
 
 ## Ahora mismo (04-11-2026)
 
-Repo `jbanon/ExportadorPersycom`, rama `main`, al día con `origin/main` (`9525582`). Clonado por
+Repo `jbanon/ExportadorPersycom`, rama `main`, al día con `origin/main` (`a992796`). Clonado por
 primera vez en la máquina de dev nueva (`persydesaubnt`, ver trampas.md de `PresupuestadorPersycom`
 sobre el cambio de máquina del 03-11-2026) en `/home/persyadmin/proyectos/ExportadorPersycom`.
 `dotnet build` verificado 0/0 ahí.
 
 Tarea 0001 (pantalla de búsqueda avanzada) sigue cerrada, sin cambios desde la sesión anterior.
 
-**Tarea 0002 abierta** (el campo "Referencia de obra" filtra sobre `PAF.Obra` y debe filtrar
-sobre `PAF.Referencia`): escrita en `.arq/tareas/0002-busqueda-obra-por-referencia.md`, pendiente
-de asignar a un programador — aún sin despachar.
+**Tarea 0002 CERRADA**: el campo "Referencia de obra" filtraba sobre `PAF.Obra` y ahora filtra
+sobre `PAF.Referencia` (cambio de una línea en `DbFacade.BuscarAvanzado`). Hecha por Sonnet,
+revisada por el arquitecto con `git diff` y además probada en vivo contra `Alugal_TNeta25` (la
+consulta real generada se ejecutó sin error; la única fila de prueba tiene `Referencia` NULL, por
+lo que da 0 resultados, comportamiento correcto). Commiteada y pusheada (`a992796`).
 
 **Resuelto en esta sesión**: la base de pruebas `Alugal_TNeta25` ya está traída a esta máquina
 (SQL Server nativo, no Docker) desde la máquina vieja por SSH. Verificado `ONLINE`, con los
