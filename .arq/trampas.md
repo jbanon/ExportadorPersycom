@@ -40,3 +40,14 @@
 - `/tmp/KoUtilities` (si sigue existiendo) es un directorio prácticamente vacío (solo subcarpetas
   sin ficheros dentro): NO sirve como referencia del código original de KoUtilities pese al
   nombre. No perder tiempo mirándolo de nuevo sin comprobar antes que tiene contenido real.
+- **Corrección 04-11-2026**: la máquina de dev cambió el 03-11-2026 (misma máquina física que
+  `PresupuestadorPersycom`, ver el `trampas.md` de ese repo). La máquina nueva (`persydesaubnt`)
+  NO tiene Docker instalado (`docker` no existe en el PATH) y su SQL Server es una instalación
+  nativa con una sola base, `PersycomPresupuestador` (confirmado con `SELECT name FROM
+  sys.databases`) — la base `Alugal_TNeta25` del párrafo de arriba NO existe aquí. El camino de
+  "probar la conexión manual a SQL Server desde Linux" descrito en este fichero y en `CLAUDE.md`
+  está roto hasta que alguien decida si recrear ese esquema de pruebas (con qué datos) o montar
+  Docker de nuevo — no se ha tocado, es una decisión del gerente/arquitecto, no de quien implemente
+  una tarea. Repo clonado por primera vez en esta máquina el 04-11-2026, en
+  `/home/persyadmin/proyectos/ExportadorPersycom`; `dotnet build` (target `net8.0-windows`) ya
+  verificado 0/0 ahí.

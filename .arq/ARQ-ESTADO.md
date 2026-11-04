@@ -2,28 +2,23 @@
 <!-- Se REESCRIBE cada turno. Maximo una pantalla. Las trampas viven en .arq/trampas.md, que
      es durable y NO se reescribe aqui. -->
 
-## Ahora mismo (06-10-2026)
+## Ahora mismo (04-11-2026)
 
-Repo `jbanon/ExportadorPersycom`, rama `main`, al día con `origin/main` (`09b434e`). **Tarea 0001
-CERRADA del todo**, incluido un cambio de alcance pedido directamente por el gerente tras probarla
-en Windows: la pantalla de búsqueda avanzada **pasa a ser LA pantalla de la aplicación**
-(`FormPrincipal`); la antigua (combo + filtro simple) se elimina por completo, junto con las
-consultas de `DbFacade` que solo ella usaba.
+Repo `jbanon/ExportadorPersycom`, rama `main`, al día con `origin/main` (`9525582`). Clonado por
+primera vez en la máquina de dev nueva (`persydesaubnt`, ver trampas.md de `PresupuestadorPersycom`
+sobre el cambio de máquina del 03-11-2026) en `/home/persyadmin/proyectos/ExportadorPersycom`.
+`dotnet build` verificado 0/0 ahí.
 
-- Bloque de conexión plegable: se pliega solo al conectar bien o al buscar, se despliega solo si
-  falla una consulta con error de base de datos.
-- Grid con cabecera oscura, filas más altas, presupuesto en negrita, texto de "sin resultados"
-  sobre la tabla vacía.
-- Cabecera con título "Exportación de presupuestos a fábrica" y subtítulo.
-- Único hueco sin equivalente literal, documentado en el informe: el desplegable con TODOS los
-  presupuestos al abrir la pantalla antigua — ahora equivale a pulsar "Buscar" con los cuatro
-  campos vacíos.
-- Confirmado por el gerente en Windows ("de momento está ok") antes de commitear.
-- Informe `.arq/informes/0001-resultado.md` reescrito para que alguien sin contexto pueda
-  retomarlo si el cliente final (quien usa la herramienta) reporta una sugerencia o un error: qué
-  se probó y qué no (SqlClient en vivo sí; exportación completa NO por el CLR apagado en el
-  servidor de pruebas; ODBC y la prueba visual, solo en Windows), decisiones técnicas y motivo de
-  cada una.
+Tarea 0001 (pantalla de búsqueda avanzada) sigue cerrada, sin cambios desde la sesión anterior.
+
+**Tarea 0002 abierta** (el campo "Referencia de obra" filtra sobre `PAF.Obra` y debe filtrar
+sobre `PAF.Referencia`): escrita en `.arq/tareas/0002-busqueda-obra-por-referencia.md`, pendiente
+de asignar a un programador — aún sin despachar.
+
+**Hallazgo de esta sesión**: la base de pruebas `Alugal_TNeta25` (contenedor Docker de la máquina
+vieja) no existe en la máquina nueva, que no tiene Docker y tiene SQL Server nativo con solo
+`PersycomPresupuestador`. El camino de verificación en vivo contra SQL Server está roto hasta que
+se decida recrear el esquema de pruebas o montar Docker. Anotado en trampas.md.
 
 **Sin resolver**: `SEG-1` (backlog) — Control Inteligente de Aplicaciones sigue bloqueando el
 `.exe` sin firmar; no se ha tocado.
@@ -32,8 +27,8 @@ consultas de `DbFacade` que solo ella usaba.
 
 - **SEG-1**: desactivar Control Inteligente de Aplicaciones en la máquina de pruebas, o firmar el
   ejecutable.
-- Activar o no el CLR de SQL Server en el contenedor compartido con el Presupuestador, para poder
-  probar la exportación completa desde Linux (hoy falla solo ahí, `Zlib.unzipxml` es SQLCLR).
+- Recrear la base de pruebas `Alugal_TNeta25` en la máquina nueva (y con qué datos), o instalar
+  Docker de nuevo — sin esto, ninguna tarea puede probarse en vivo contra SQL Server desde Linux.
 
 ## Convenciones vigentes
 
